@@ -1,3 +1,9 @@
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
+
 public class Food {
 
   public Food() {
@@ -26,6 +32,5 @@ public class Food {
   public int[] getFilledColor() {
     return filledColor;
   }
-
 
 }

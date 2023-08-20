@@ -25,23 +25,27 @@ public class SnakeGame extends PApplet {
 /**
  * Snake Game
  * @author Leon-Junio
- *
- **/
+ */
 
-public static final int BG_COLOR = 0; //<>// //<>// //<>// //<>// //<>//
+public static final int[] BG_COLOR = {50, 230, 50};
 public static Snake snake;
 public static final int W = 600, H = 400;
-public static final int SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10;
-public static final int VELOCITY = 10;
+public static final int SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
+public static int MOVE_INTERVAL = 100;
+private static int score;
 private static SnakeMove lastMove = null;
 public static boolean isRunning;
-private static long currentTime = 0l;
-private static long lastMoveTime;
-private static final int MOVE_INTERVAL = 100;
+private static long currentTime = 0l, lastMoveTime;
 public static Food food = null;
 
+
+/**
+ * Setup configuration of the game
+ *
+ */
  public void setup() {
   /* size commented out by preprocessor */;
+  score = 0;
   isRunning = true;
   lastMoveTime = System.currentTimeMillis();
   frameRate(60);
@@ -49,15 +53,17 @@ public static Food food = null;
   snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
 }
 
+/**
+ * Draw the game frame by frame (gameplay loop function - 60fps)
+ */
  public void draw() {
   try {
-    background(BG_COLOR);
+    background(BG_COLOR[0], BG_COLOR[1], BG_COLOR[2]);
     drawBorders();
+    drawScore();
     if (!isRunning) {
-      fill(255, 255, 255);
-      textFont(createFont("Impact", 32));
-      text("Game Over", (W/2)-65, H/2);
-      text("Press 'R' to restart", (W/2)-120, (H/2)+40);
+      drawGameOver();
+      return;
     }
     drawFood();
     drawSnake();
@@ -72,14 +78,46 @@ public static Food food = null;
   }
 }
 
+/** RENDERS **/
+
+/**
+ * Draw the game over screen
+ */
+ public void drawGameOver() {
+  fill(255, 255, 255);
+  textFont(createFont("Impact", 32));
+  text("Game Over", (W/2)-65, H/2);
+  text("Press 'R' to restart", (W/2)-120, (H/2)+40);
+}
+
+/**
+ * Draw the snake body and head in the screen
+ */
  public void drawSnake() {
-  for (var body : snake.getSnakeBody()) {
-    stroke(50,200,100);
-    fill(0, 255, 0);
+  var body = snake.getBody(0);
+  stroke(0, 30, 255);
+  fill(150, 60, 200);
+  rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+  for (int index = 1; index < snake.bodySize(); index++) {
+    body = snake.getBody(index);
+    stroke(0, 30, 255);
+    fill(50, 100, 200);
     rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
   }
 }
 
+/**
+ * Draw the score in the screen (bottom center)
+ */
+ public void drawScore() {
+  fill(255, 255, 255);
+  textFont(createFont("Impact", 18));
+  text("Leon Snake Game: "+score, (W/2) - 70, H - 3);
+}
+
+/**
+ * Draw the borders of the game (4 rects - top, left, right, bottom)
+ */
  public void drawBorders() {
   fill(20, 100, 255);
   noStroke();
@@ -89,6 +127,10 @@ public static Food food = null;
   rect(0, H-BORDER, W, BORDER);
 }
 
+/**
+ * Draw the food in the screen (random position and color)
+ * if food is null, spawn a new food
+ */
  public void drawFood() {
   if (food == null) {
     spawnFood();
@@ -99,29 +141,60 @@ public static Food food = null;
   rect(food.position.getX(), food.position.getY(), GRID_SIZE, GRID_SIZE);
 }
 
+/** GAME LOGIC **/
+
+/**
+ * Run the game over logic (remove food, destroy snake and stop game)
+ */
 public static void gameOver() {
   isRunning = false;
   food = null;
   snake.destroySnake();
 }
 
+/**
+ * Restart the game (reset snake, food, score and move interval)
+ */
  public void restartGame() {
   snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
   lastMove = null;
   isRunning = true;
+  MOVE_INTERVAL = 100;
+  score = 0;
 }
 
+/**
+ * Stop the actual food (set food to null)
+ * It will spawn a new food in the next frame
+ */
 public static void newFood() {
   food = null;
 }
 
+/**
+ * Update the score (add 1 to score)
+ */
+public static void updateScore() {
+  score++;
+}
+
+/**
+ * Spawn a new food in the screen (random position and color)
+ * For each spawn increase the snake speed (decrease the move interval)
+ */
  public void spawnFood() {
   var x = (int)random(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER);
   var y = (int)random(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER);
   var colors = new int[]{(int)random(0, 255), (int)random(0, 255), (int)random(0, 255)};
   food = new Food(new Position(new Integer[]{x, y}), colors);
+  if (MOVE_INTERVAL > 50)
+    MOVE_INTERVAL -= 1;
 }
 
+/**
+ * Capture the key typed and update the snake movement
+ * If the game is not running, capture the 'r' key to restart the game
+ */
  public void keyTyped() {
   if (isRunning) {
     var lastPosition = snake.getFirstPosition();
@@ -146,9 +219,6 @@ public static void newFood() {
       lastMove = SnakeMove.RIGHT;
       snake.addPosition(lastPosition, lastMove);
       break;
-    case 'e':
-      snake.newBody();
-      break;
     }
   } else {
     if (key == 'r') {
@@ -156,6 +226,12 @@ public static void newFood() {
     }
   }
 }
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
+
 public class Food {
 
   public Food() {
@@ -184,7 +260,6 @@ public class Food {
   public int[] getFilledColor() {
     return filledColor;
   }
-
 
 }
 
@@ -231,6 +306,12 @@ public class Position {
     return new Position(position.clone());
   }
 }
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
+
 
 
 
@@ -241,6 +322,7 @@ public class Snake {
   public Snake() {
   }
 
+  private static final int FOOD_COLISION_TOLERANCE = 10, BODY_COLISION_TOLERANCE = 1;
   private List<SnakeBody> snakeBody = new ArrayList<>();
   private Map<Position, SnakeMove> positions = new HashMap<>();
 
@@ -252,6 +334,7 @@ public class Snake {
     this.snakeBody = snakeBody;
   }
 
+
   public Map<Position, SnakeMove> getPositions() {
     return positions;
   }
@@ -260,24 +343,85 @@ public class Snake {
     this.positions = positions;
   }
 
+  /**
+   * Get the size of the snake body
+   * @return int the size of the snake body
+   */
+  public int bodySize() {
+    return snakeBody.size();
+  }
+
+  /**
+   * Get the snake body at the specified index
+   * @param index the index of the snake body
+   * @return SnakeBody the snake body at the specified index
+   */
+  public SnakeBody getBody(int index) {
+    return snakeBody.get(index);
+  }
+
+  /**
+   * Get the snake body at the specified index
+   * @param index the index of the snake body
+   * @return SnakeBody the snake body at the specified index
+   */
   public void addPosition(Position position, SnakeMove movement) {
     positions.put(position.clone(), movement);
   }
 
+  /**
+   * Adds a new SnakeBody to the snake.
+   * @param body The SnakeBody to be added.
+   */
   public void addSnakeBody(SnakeBody body) {
     snakeBody.add(body);
   }
 
+  /**
+   * Gets the position of the snake.
+   * @param position The position to be retrieved.
+   */
   public void getPosition(Position position) {
     positions.get(position);
   }
 
+  /**
+   * Gets the first position of the snake.
+   * @return Position The first position of the snake.
+   */
+  public Position getFirstPosition() {
+    return snakeBody.get(0).position;
+  }
+
+  /**
+   * Destroys the snake by clearing its body and positions.
+   */
   public void destroySnake() {
     snakeBody.clear();
     if (!positions.isEmpty())
       positions.clear();
   }
 
+  /**
+   * Adds a new body to the snake.
+   * The new body is created based on the last body's position and movement.
+   * The new body is positioned one movement offset away from the last body.
+   */
+  public void newBody() {
+    var lastBody = snakeBody.get(snakeBody.size()-1);
+    var positions = lastBody.getPosition();
+    var movement = lastBody.getMovement();
+    var offset = movement.getOffset();
+    var body = new SnakeBody(movement, positions);
+    body.position.sum(offset[0], offset[1]);
+    addSnakeBody(body);
+  }
+
+  /**
+   * Updates the movement of the snake and checks for collisions with food, borders and body.
+   * If the snake collides with food, a new food is created and the score is updated.
+   * If the snake collides with borders or body, the game is over.
+   */
   public void updateMovement() {
     if (!positions.isEmpty()) {
       for (int index = 0; index < snakeBody.size(); index++) {
@@ -290,38 +434,46 @@ public class Snake {
       }
     }
     updateAllPositions();
-    if(checkCollisionWithFood()){
+    if (checkCollisionWithFood()) {
       SnakeGame.newFood();
       newBody();
+      SnakeGame.updateScore();
     }
     if (checkCollisionWithBorders() || checkCollisionWithBody()) {
       SnakeGame.gameOver();
     }
   }
 
+  /**
+   * Starts the snake at the specified position.
+   * @param position The position to start the snake.
+   */
   public void startSnake(Integer[] position) {
     addPosition(new Position(position), SnakeMove.UP);
     addSnakeBody(new SnakeBody(SnakeMove.UP, new Position(position)));
   }
 
-  public Position getFirstPosition() {
-    return snakeBody.get(0).position;
-  }
-
+  /**
+   * Updates the position of all snake pieces of body.
+   */
   private void updateAllPositions() {
     for (var body : snakeBody) {
       body.doMovement(SnakeGame.VELOCITY);
     }
   }
 
+
+  /**
+   * Checks if the snake's head collides with its body.
+   * @return true if there is a collision, false otherwise.
+   */
   private boolean checkCollisionWithBody() {
     var firstPosition = getFirstPosition();
     var result = false;
     for (int index = 1; index < snakeBody.size(); index++) {
       var bodyPos = snakeBody.get(index).getPosition();
-      int tolerance = 1;
-      if (Math.abs(bodyPos.getX() - firstPosition.getX()) <= tolerance &&
-        Math.abs(bodyPos.getY() - firstPosition.getY()) <= tolerance) {
+      if (Math.abs(bodyPos.getX() - firstPosition.getX()) <= BODY_COLISION_TOLERANCE &&
+        Math.abs(bodyPos.getY() - firstPosition.getY()) <= BODY_COLISION_TOLERANCE) {
         result = true;
         break;
       }
@@ -329,40 +481,54 @@ public class Snake {
     return result;
   }
 
-  private boolean checkCollisionWithFood(){
+
+  /**
+   * Checks if the snake collides with the food.
+   * @return true if the snake collides with the food, false otherwise.
+   */
+  private boolean checkCollisionWithFood() {
     var firstPosition = getFirstPosition();
     var foodPosition = SnakeGame.food.getPosition();
-    int tolerance = 10;
-    return (Math.abs(foodPosition.getX() - firstPosition.getX()) <= tolerance &&
-      Math.abs(foodPosition.getY() - firstPosition.getY()) <= tolerance);
+    return (Math.abs(foodPosition.getX() - firstPosition.getX()) <= FOOD_COLISION_TOLERANCE &&
+      Math.abs(foodPosition.getY() - firstPosition.getY()) <= FOOD_COLISION_TOLERANCE);
   }
 
+  /**
+   * Checks if the snake has collided with the game borders.
+   * @return true if the snake has collided with the borders, false otherwise.
+   */
   private boolean checkCollisionWithBorders() {
     var position = getFirstPosition();
     return  (position.getX() < SnakeGame.BORDER || position.getX() > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
       position.getY() < SnakeGame.BORDER || position.getY() > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
   }
 
+  /**
+   * Checks if the last body of the snake has been reached and removes its position from the positions map if so.
+   * @param index The index of the current body part being checked.
+   */
   private void checkLastBody(int index) {
     if (snakeBody.size() == 1 || index == snakeBody.size()-1) {
       positions.remove(snakeBody.get(index).getPosition());
     }
   }
 
+  /**
+   * Checks if the given body position is one joint of movement.
+   * @param bodyPosition The position to be checked.
+   * @return True if the position is already occupied, false otherwise.
+   */
   private boolean checkBodyPosition(Position bodyPosition) {
     return positions.containsKey(bodyPosition);
   }
-
-  public void newBody() {
-    var lastBody = snakeBody.get(snakeBody.size()-1);
-    var positions = lastBody.getPosition();
-    var movement = lastBody.getMovement();
-    var offset = movement.getOffset();
-    var body = new SnakeBody(movement, positions);
-    body.position.sum(offset[0], offset[1]);
-    addSnakeBody(body);
-  }
 }
+
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
+
 public class SnakeBody {
 
   public SnakeBody(SnakeMove movement, Position position) {
@@ -389,19 +555,34 @@ public class SnakeBody {
     return movement;
   }
 
+  /**
+   * Do a movement in the snake body with a velocity value
+   * @param velocity Integer value of velocity
+   */
   public void doMovement(Integer velocity) {
     var positionAux = movement.run(position.toArray(), velocity);
-    position = new Position(new Integer[]{positionAux[0], positionAux[1]});
+    position = new Position(positionAux.clone());
   }
 }
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
 
 
+
+/**
+ * Enum to represent the snake moves
+ * @param action - BiFunction to apply the move to the body piece
+ * @param OFFSET - Offset to apply to the body piece when the snake moves
+ **/
 public enum SnakeMove {
 
   UP((position, velocity) -> new Integer[] { position[0], position[1] - velocity  }),
     DOWN((position, velocity) -> new Integer[] { position[0], position[1] + velocity  }),
-    LEFT((position, velocity) -> new Integer[] { position[0] - velocity , position[1] }),
-    RIGHT((position, velocity) -> new Integer[] { position[0] + velocity , position[1] });
+    LEFT((position, velocity) -> new Integer[] { position[0] - velocity, position[1] }),
+    RIGHT((position, velocity) -> new Integer[] { position[0] + velocity, position[1] });
 
   private BiFunction<Integer[], Integer, Integer[]> action;
   private final Integer OFFSET = 10;
@@ -410,11 +591,20 @@ public enum SnakeMove {
     this.action = action;
   }
 
-
+  /**
+   * Apply the move to the body piece
+   * @param position - Position of the body piece
+   * @param velocity - Velocity of the snake
+   * @return Integer[] - New position of the body piece
+   **/
   public Integer[] run(Integer position[], Integer velocity) {
     return action.apply(position, velocity);
   }
 
+  /**
+   * Get the offset to apply to the body piece when the snake moves
+   * @return Integer[] - Offset to apply to the body piece when the snake moves
+   **/
   public Integer[] getOffset() {
     Integer[] result = {};
     switch(this) {

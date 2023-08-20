@@ -1,3 +1,9 @@
+/**
+ * Snake Game
+ * @author Leon-Junio
+ *
+ **/
+
 public class SnakeBody {
 
   public SnakeBody(SnakeMove movement, Position position) {
@@ -24,8 +30,12 @@ public class SnakeBody {
     return movement;
   }
 
+  /**
+   * Do a movement in the snake body with a velocity value
+   * @param velocity Integer value of velocity
+   */
   public void doMovement(Integer velocity) {
     var positionAux = movement.run(position.toArray(), velocity);
-    position = new Position(new Integer[]{positionAux[0], positionAux[1]});
+    position = new Position(positionAux.clone());
   }
 }
