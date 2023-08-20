@@ -1,0 +1,6 @@
+/dist/*
+*.class
+*.zip
+*.bak
+*.jar
+*.map
