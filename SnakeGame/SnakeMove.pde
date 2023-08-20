@@ -13,10 +13,26 @@ import java.util.function.BiFunction;
  **/
 public enum SnakeMove {
 
-  UP((position, velocity) -> new Integer[] { position[0], position[1] - velocity  }),
-    DOWN((position, velocity) -> new Integer[] { position[0], position[1] + velocity  }),
-    LEFT((position, velocity) -> new Integer[] { position[0] - velocity, position[1] }),
-    RIGHT((position, velocity) -> new Integer[] { position[0] + velocity, position[1] });
+  UP((position, velocity) -> {
+    position[1] -= velocity;
+    return position;
+  }
+  ),
+    DOWN((position, velocity) -> {
+    position[1] += velocity;
+    return position;
+  }
+  ),
+    LEFT((position, velocity) -> {
+    position[0] -= velocity;
+    return position;
+  }
+  ),
+    RIGHT((position, velocity) -> {
+    position[0] += velocity;
+    return position;
+  }
+  );
 
   private BiFunction<Integer[], Integer, Integer[]> action;
   private final Integer OFFSET = 10;
@@ -39,20 +55,20 @@ public enum SnakeMove {
    * Get the offset to apply to the body piece when the snake moves
    * @return Integer[] - Offset to apply to the body piece when the snake moves
    **/
-  public Integer[] getOffset() {
-    Integer[] result = {};
+  public int[] getOffset() {
+    int[] result = {};
     switch(this) {
     case UP:
-      result = new Integer[] {0, +OFFSET};
+      result = new int[]{0, +OFFSET};
       break;
     case DOWN:
-      result =  new Integer[]{0, -OFFSET};
+      result = new int[]{0, -OFFSET};
       break;
     case LEFT:
-      result =  new Integer[]{+OFFSET, 0};
+      result = new int[]{+OFFSET, 0};
       break;
     case RIGHT:
-      result =  new Integer[]{-OFFSET, 0};
+      result = new int[]{-OFFSET, 0};
       break;
     }
     return result;

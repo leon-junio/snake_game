@@ -34,8 +34,9 @@ public class SnakeBody {
    * Do a movement in the snake body with a velocity value
    * @param velocity Integer value of velocity
    */
-  public void doMovement(Integer velocity) {
+  public void doMovement(int velocity) {
     var positionAux = movement.run(position.toArray(), velocity);
-    position = new Position(positionAux.clone());
+    position.setX(positionAux[0]);
+    position.setY(positionAux[1]);
   }
 }

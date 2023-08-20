@@ -15,6 +15,14 @@ public class Position {
     return position[1];
   }
 
+  public void setX(Integer x) {
+    position[0] = x;
+  }
+
+  public void setY(Integer y) {
+    position[1] = y;
+  }
+
   public void sum(Integer x, Integer y) {
     position[0] += x;
     position[1] += y;
