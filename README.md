@@ -8,7 +8,7 @@ A simple snake game coded in java with processing to train code control and maxi
 ## Run
 
  - JDK 11 required
- - Just execute the .exe file
+ - Just execute the .exe file or the linux file
 
 ```bash
   java -jar will not work!
