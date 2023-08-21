@@ -34,10 +34,10 @@ public enum SnakeMove {
   }
   );
 
-  private BiFunction<Integer[], Integer, Integer[]> action;
-  private final Integer OFFSET = 10;
+  private BiFunction<int[], Integer, int[]> action;
+  private final int OFFSET = 10;
 
-  private SnakeMove(BiFunction<Integer[], Integer, Integer[]> action) {
+  private SnakeMove(BiFunction<int[], Integer, int[]> action) {
     this.action = action;
   }
 
@@ -45,15 +45,14 @@ public enum SnakeMove {
    * Apply the move to the body piece
    * @param position - Position of the body piece
    * @param velocity - Velocity of the snake
-   * @return Integer[] - New position of the body piece
    **/
-  public Integer[] run(Integer position[], Integer velocity) {
-    return action.apply(position, velocity);
+  public void run(int position[], int velocity) {
+    action.apply(position, velocity);
   }
 
   /**
    * Get the offset to apply to the body piece when the snake moves
-   * @return Integer[] - Offset to apply to the body piece when the snake moves
+   * @return int[] - Offset to apply to the body piece when the snake moves
    **/
   public int[] getOffset() {
     int[] result = {};

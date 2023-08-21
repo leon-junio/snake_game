@@ -3,8 +3,10 @@
  * @author Leon-Junio
  */
 
+import java.util.Random;
+
 public static final int[] BG_COLOR = {50, 230, 50};
-public static Snake snake;
+private static Snake snake;
 public static final int W = 600, H = 400;
 public static final int SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
 public static int MOVE_INTERVAL = 100;
@@ -12,7 +14,10 @@ private static int score;
 private static SnakeMove lastMove = null;
 public static boolean isRunning;
 private static long currentTime = 0l, lastMoveTime;
-public static Food food = null;
+private static SnakeBody body = null;
+private static int FOOD_X, FOOD_Y;
+private static int[] FOOD_COLOR;
+private static Random random;
 
 
 /**
@@ -26,7 +31,9 @@ void setup() {
   lastMoveTime = System.currentTimeMillis();
   frameRate(60);
   snake = new Snake();
-  snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
+  snake.startSnake(new int[]{(int)W/2, (int)H/2});
+  random = new Random();
+  newFood();
 }
 
 /**
@@ -51,7 +58,6 @@ void draw() {
   }
   catch(Exception e) {
     e.printStackTrace();
-    System.exit(1);
   }
 }
 
@@ -71,15 +77,15 @@ void drawGameOver() {
  * Draw the snake body and head in the screen
  */
 void drawSnake() {
-  var body = snake.getBody(0);
+  body = snake.getBody(0);
   stroke(0, 30, 255);
   fill(150, 60, 200);
-  rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+  rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
   for (int index = 1; index < snake.bodySize(); index++) {
     body = snake.getBody(index);
     stroke(0, 30, 255);
     fill(50, 100, 200);
-    rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+    rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
   }
 }
 
@@ -109,13 +115,9 @@ void drawBorders() {
  * if food is null, spawn a new food
  */
 void drawFood() {
-  if (food == null) {
-    spawnFood();
-  }
-  var colors = food.getFilledColor();
   stroke(255, 255, 255);
-  fill(colors[0], colors[1], colors[2]);
-  rect(food.position.getX(), food.position.getY(), GRID_SIZE, GRID_SIZE);
+  fill(FOOD_COLOR[0], FOOD_COLOR[1], FOOD_COLOR[2]);
+  rect(FOOD_X, FOOD_Y, GRID_SIZE, GRID_SIZE);
 }
 
 /** GAME LOGIC **/
@@ -125,27 +127,19 @@ void drawFood() {
  */
 public static void gameOver() {
   isRunning = false;
-  food = null;
   snake.destroySnake();
+  System.gc(); //free some memory
 }
 
 /**
  * Restart the game (reset snake, food, score and move interval)
  */
 void restartGame() {
-  snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
+  snake.startSnake(new int[]{(int)W/2, (int)H/2});
   lastMove = null;
   isRunning = true;
   MOVE_INTERVAL = 100;
   score = 0;
-}
-
-/**
- * Stop the actual food (set food to null)
- * It will spawn a new food in the next frame
- */
-public static void newFood() {
-  food = null;
 }
 
 /**
@@ -159,11 +153,10 @@ public static void updateScore() {
  * Spawn a new food in the screen (random position and color)
  * For each spawn increase the snake speed (decrease the move interval)
  */
-void spawnFood() {
-  var x = (int)random(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER);
-  var y = (int)random(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER);
-  var colors = new int[]{(int)random(0, 255), (int)random(0, 255), (int)random(0, 255)};
-  food = new Food(new Position(new Integer[]{x, y}), colors);
+public static void newFood() {
+  FOOD_X = random.ints(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_Y = random.ints(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_COLOR = new int[]{random.nextInt(255), random.nextInt(255), random.nextInt(255)};
   if (MOVE_INTERVAL > 50)
     MOVE_INTERVAL -= 1;
 }

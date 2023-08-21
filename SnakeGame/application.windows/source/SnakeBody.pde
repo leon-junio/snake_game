@@ -6,24 +6,36 @@
 
 public class SnakeBody {
 
-  public SnakeBody(SnakeMove movement, Position position) {
+  public SnakeBody(SnakeMove movement, int[] position) {
     this.position = position.clone();
     this.movement = movement;
   }
 
   private SnakeMove movement;
-  private Position position;
+  private final int[] position;
+
+  public int getX() {
+    return position[0];
+  }
+
+  public int getY() {
+    return position[1];
+  }
+
+  public void setX(int x) {
+    position[0] = x;
+  }
+
+  public void setY(int y) {
+    position[1] = y;
+  }
+
+  public int[] getPosition() {
+    return position;
+  }
 
   public void setMovement(SnakeMove movement) {
     this.movement = movement;
-  }
-
-  public void setPosition(Position position) {
-    this.position = position;
-  }
-
-  public Position getPosition() {
-    return position;
   }
 
   public SnakeMove getMovement() {
@@ -32,11 +44,9 @@ public class SnakeBody {
 
   /**
    * Do a movement in the snake body with a velocity value
-   * @param velocity Integer value of velocity
+   * @param velocity int value of velocity
    */
   public void doMovement(int velocity) {
-    var positionAux = movement.run(position.toArray(), velocity);
-    position.setX(positionAux[0]);
-    position.setY(positionAux[1]);
+    movement.run(position, velocity);
   }
 }

@@ -4,7 +4,7 @@ import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
 
-import java.util.Arrays;
+import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.function.BiFunction;
@@ -25,8 +25,10 @@ public class SnakeGame extends PApplet {
  * @author Leon-Junio
  */
 
+
+
 public static final int[] BG_COLOR = {50, 230, 50};
-public static Snake snake;
+private static Snake snake;
 public static final int W = 600, H = 400;
 public static final int SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
 public static int MOVE_INTERVAL = 100;
@@ -34,7 +36,10 @@ private static int score;
 private static SnakeMove lastMove = null;
 public static boolean isRunning;
 private static long currentTime = 0l, lastMoveTime;
-public static Food food = null;
+private static SnakeBody body = null;
+private static int FOOD_X, FOOD_Y;
+private static int[] FOOD_COLOR;
+private static Random random;
 
 
 /**
@@ -48,7 +53,9 @@ public static Food food = null;
   lastMoveTime = System.currentTimeMillis();
   frameRate(60);
   snake = new Snake();
-  snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
+  snake.startSnake(new int[]{(int)W/2, (int)H/2});
+  random = new Random();
+  newFood();
 }
 
 /**
@@ -73,7 +80,6 @@ public static Food food = null;
   }
   catch(Exception e) {
     e.printStackTrace();
-    System.exit(1);
   }
 }
 
@@ -93,15 +99,15 @@ public static Food food = null;
  * Draw the snake body and head in the screen
  */
  public void drawSnake() {
-  var body = snake.getBody(0);
+  body = snake.getBody(0);
   stroke(0, 30, 255);
   fill(150, 60, 200);
-  rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+  rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
   for (int index = 1; index < snake.bodySize(); index++) {
     body = snake.getBody(index);
     stroke(0, 30, 255);
     fill(50, 100, 200);
-    rect(body.position.getX(), body.position.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+    rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
   }
 }
 
@@ -131,13 +137,9 @@ public static Food food = null;
  * if food is null, spawn a new food
  */
  public void drawFood() {
-  if (food == null) {
-    spawnFood();
-  }
-  var colors = food.getFilledColor();
   stroke(255, 255, 255);
-  fill(colors[0], colors[1], colors[2]);
-  rect(food.position.getX(), food.position.getY(), GRID_SIZE, GRID_SIZE);
+  fill(FOOD_COLOR[0], FOOD_COLOR[1], FOOD_COLOR[2]);
+  rect(FOOD_X, FOOD_Y, GRID_SIZE, GRID_SIZE);
 }
 
 /** GAME LOGIC **/
@@ -147,27 +149,19 @@ public static Food food = null;
  */
 public static void gameOver() {
   isRunning = false;
-  food = null;
   snake.destroySnake();
+  System.gc(); //free some memory
 }
 
 /**
  * Restart the game (reset snake, food, score and move interval)
  */
  public void restartGame() {
-  snake.startSnake(new Integer[]{(Integer)W/2, (Integer)H/2});
+  snake.startSnake(new int[]{(int)W/2, (int)H/2});
   lastMove = null;
   isRunning = true;
   MOVE_INTERVAL = 100;
   score = 0;
-}
-
-/**
- * Stop the actual food (set food to null)
- * It will spawn a new food in the next frame
- */
-public static void newFood() {
-  food = null;
 }
 
 /**
@@ -181,11 +175,10 @@ public static void updateScore() {
  * Spawn a new food in the screen (random position and color)
  * For each spawn increase the snake speed (decrease the move interval)
  */
- public void spawnFood() {
-  var x = (int)random(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER);
-  var y = (int)random(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER);
-  var colors = new int[]{(int)random(0, 255), (int)random(0, 255), (int)random(0, 255)};
-  food = new Food(new Position(new Integer[]{x, y}), colors);
+public static void newFood() {
+  FOOD_X = random.ints(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_Y = random.ints(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_COLOR = new int[]{random.nextInt(255), random.nextInt(255), random.nextInt(255)};
   if (MOVE_INTERVAL > 50)
     MOVE_INTERVAL -= 1;
 }
@@ -222,95 +215,6 @@ public static void updateScore() {
     if (key == 'r') {
       restartGame();
     }
-  }
-}
-
-/**
- * Snake Game
- * @author Leon-Junio
- *
- **/
-
-public class Food {
-
-  public Food() {
-  };
-
-  public Food(Position position, int[] filledColor) {
-    this.position = position;
-    this.filledColor = filledColor;
-  }
-
-  private Position position;
-  private int[] filledColor;
-
-  public void setPosition(Position position) {
-    this.position = position;
-  }
-
-  public Position getPosition() {
-    return position;
-  }
-
-  public void setFilledColor(int[] filledColor) {
-    this.filledColor = filledColor;
-  }
-
-  public int[] getFilledColor() {
-    return filledColor;
-  }
-
-}
-
-
-public class Position {
-  private final Integer[] position;
-
-  public Position(Integer[] position) {
-    this.position = position;
-  }
-
-  public Integer getX() {
-    return position[0];
-  }
-
-  public Integer getY() {
-    return position[1];
-  }
-
-  public void setX(Integer x) {
-    position[0] = x;
-  }
-
-  public void setY(Integer y) {
-    position[1] = y;
-  }
-
-  public void sum(Integer x, Integer y) {
-    position[0] += x;
-    position[1] += y;
-  }
-  
-  public Integer[] toArray(){
-    return position;
-  }
-
-  @Override
-    public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Position that = (Position) o;
-    return Arrays.equals(position, that.position);
-  }
-
-  @Override
-    public int hashCode() {
-    return Arrays.hashCode(position);
-  }
-
-  @Override
-  public Position clone() {
-    return new Position(position.clone());
   }
 }
 /**
@@ -361,7 +265,7 @@ public class Snake {
    * @return SnakeBody the snake body at the specified index
    */
   public void updatePosition(SnakeMove movement) {
-    snakeBody.get(0).setMovement(movement);
+    getSnakeHead().setMovement(movement);
   }
 
   /**
@@ -376,8 +280,8 @@ public class Snake {
    * Gets the first position of the snake.
    * @return Position The first position of the snake.
    */
-  public Position getFirstPosition() {
-    return snakeBody.get(0).position;
+  public int[] getFirstPosition() {
+    return getSnakeHead().getPosition();
   }
 
   /**
@@ -398,7 +302,8 @@ public class Snake {
     var movement = lastBody.getMovement();
     var offset = movement.getOffset();
     var body = new SnakeBody(movement, positions);
-    body.position.sum(offset[0], offset[1]);
+    body.setX(body.getX() + offset[0]);
+    body.setY(body.getY() +offset[1]);
     addSnakeBody(body);
   }
 
@@ -412,8 +317,8 @@ public class Snake {
         for (int index = snakeBody.size() - 1; index > 0; index--) {
             var currentBody = snakeBody.get(index);
             var previousBody = snakeBody.get(index - 1);
-            currentBody.getPosition().setX(previousBody.getPosition().getX());
-            currentBody.getPosition().setY(previousBody.getPosition().getY());
+            currentBody.setX(previousBody.getX());
+            currentBody.setY(previousBody.getY());
             currentBody.setMovement(previousBody.getMovement());
         }
     }
@@ -432,15 +337,15 @@ public class Snake {
    * Starts the snake at the specified position.
    * @param position The position to start the snake.
    */
-  public void startSnake(Integer[] position) {
-    addSnakeBody(new SnakeBody(SnakeMove.UP, new Position(position)));
+  public void startSnake(int[] position) {
+    addSnakeBody(new SnakeBody(SnakeMove.UP, position));
   }
 
   /**
    * Updates the position of all snake pieces of body.
    */
   private void updateHeadPosition() {
-     snakeBody.get(0).doMovement(SnakeGame.VELOCITY);
+     getSnakeHead().doMovement(SnakeGame.VELOCITY);
   }
 
 
@@ -449,12 +354,12 @@ public class Snake {
    * @return true if there is a collision, false otherwise.
    */
   private boolean checkCollisionWithBody() {
-    var firstPosition = getFirstPosition();
+    var firstBody = getSnakeHead();
     var result = false;
     for (int index = 1; index < snakeBody.size(); index++) {
-      var bodyPos = snakeBody.get(index).getPosition();
-      if (Math.abs(bodyPos.getX() - firstPosition.getX()) <= BODY_COLISION_TOLERANCE &&
-        Math.abs(bodyPos.getY() - firstPosition.getY()) <= BODY_COLISION_TOLERANCE) {
+      var body = snakeBody.get(index);
+      if (Math.abs(body.getX() - firstBody.getX()) <= BODY_COLISION_TOLERANCE &&
+        Math.abs(body.getY() - firstBody.getY()) <= BODY_COLISION_TOLERANCE) {
         result = true;
         break;
       }
@@ -462,16 +367,22 @@ public class Snake {
     return result;
   }
 
+  /**
+   * Gets the snake's head.
+   * @return SnakeBody The snake's head.
+   */
+  public SnakeBody getSnakeHead() {
+    return snakeBody.get(0);
+  }
 
   /**
    * Checks if the snake collides with the food.
    * @return true if the snake collides with the food, false otherwise.
    */
   private boolean checkCollisionWithFood() {
-    var firstPosition = getFirstPosition();
-    var foodPosition = SnakeGame.food.getPosition();
-    return (Math.abs(foodPosition.getX() - firstPosition.getX()) <= FOOD_COLISION_TOLERANCE &&
-      Math.abs(foodPosition.getY() - firstPosition.getY()) <= FOOD_COLISION_TOLERANCE);
+    var bodyPos = getSnakeHead();
+    return (Math.abs(SnakeGame.FOOD_X - bodyPos.getX()) <= FOOD_COLISION_TOLERANCE &&
+      Math.abs(SnakeGame.FOOD_Y - bodyPos.getY()) <= FOOD_COLISION_TOLERANCE);
   }
 
   /**
@@ -479,9 +390,9 @@ public class Snake {
    * @return true if the snake has collided with the borders, false otherwise.
    */
   private boolean checkCollisionWithBorders() {
-    var position = getFirstPosition();
-    return  (position.getX() < SnakeGame.BORDER || position.getX() > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
-      position.getY() < SnakeGame.BORDER || position.getY() > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
+    var body = getSnakeHead();
+    return  (body.getX() < SnakeGame.BORDER || body.getX() > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
+      body.getY() < SnakeGame.BORDER || body.getY() > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
   }
 }
 /**
@@ -492,24 +403,36 @@ public class Snake {
 
 public class SnakeBody {
 
-  public SnakeBody(SnakeMove movement, Position position) {
+  public SnakeBody(SnakeMove movement, int[] position) {
     this.position = position.clone();
     this.movement = movement;
   }
 
   private SnakeMove movement;
-  private Position position;
+  private final int[] position;
+
+  public int getX() {
+    return position[0];
+  }
+
+  public int getY() {
+    return position[1];
+  }
+
+  public void setX(int x) {
+    position[0] = x;
+  }
+
+  public void setY(int y) {
+    position[1] = y;
+  }
+
+  public int[] getPosition() {
+    return position;
+  }
 
   public void setMovement(SnakeMove movement) {
     this.movement = movement;
-  }
-
-  public void setPosition(Position position) {
-    this.position = position;
-  }
-
-  public Position getPosition() {
-    return position;
   }
 
   public SnakeMove getMovement() {
@@ -518,12 +441,10 @@ public class SnakeBody {
 
   /**
    * Do a movement in the snake body with a velocity value
-   * @param velocity Integer value of velocity
+   * @param velocity int value of velocity
    */
   public void doMovement(int velocity) {
-    var positionAux = movement.run(position.toArray(), velocity);
-    position.setX(positionAux[0]);
-    position.setY(positionAux[1]);
+    movement.run(position, velocity);
   }
 }
 /**
@@ -562,10 +483,10 @@ public enum SnakeMove {
   }
   );
 
-  private BiFunction<Integer[], Integer, Integer[]> action;
-  private final Integer OFFSET = 10;
+  private BiFunction<int[], Integer, int[]> action;
+  private final int OFFSET = 10;
 
-  private SnakeMove(BiFunction<Integer[], Integer, Integer[]> action) {
+  private SnakeMove(BiFunction<int[], Integer, int[]> action) {
     this.action = action;
   }
 
@@ -573,15 +494,14 @@ public enum SnakeMove {
    * Apply the move to the body piece
    * @param position - Position of the body piece
    * @param velocity - Velocity of the snake
-   * @return Integer[] - New position of the body piece
    **/
-  public Integer[] run(Integer position[], Integer velocity) {
-    return action.apply(position, velocity);
+  public void run(int position[], int velocity) {
+    action.apply(position, velocity);
   }
 
   /**
    * Get the offset to apply to the body piece when the snake moves
-   * @return Integer[] - Offset to apply to the body piece when the snake moves
+   * @return int[] - Offset to apply to the body piece when the snake moves
    **/
   public int[] getOffset() {
     int[] result = {};

@@ -4,3 +4,5 @@
 *.bak
 *.jar
 *.map
+application.linux
+application.windows
