@@ -51,6 +51,7 @@ void draw() {
   }
   catch(Exception e) {
     e.printStackTrace();
+    System.exit(1);
   }
 }
 
@@ -173,27 +174,26 @@ void spawnFood() {
  */
 void keyTyped() {
   if (isRunning) {
-    var lastPosition = snake.getFirstPosition();
     switch(key) {
     case 'w':
       if (lastMove == SnakeMove.DOWN) break;
       lastMove = SnakeMove.UP;
-      snake.addPosition(lastPosition, lastMove);
+      snake.updatePosition(lastMove);
       break;
     case 'a':
       if (lastMove == SnakeMove.RIGHT) break;
       lastMove = SnakeMove.LEFT;
-      snake.addPosition(lastPosition, lastMove);
+      snake.updatePosition(lastMove);
       break;
     case 's':
       if (lastMove == SnakeMove.UP) break;
       lastMove = SnakeMove.DOWN;
-      snake.addPosition(lastPosition, lastMove);
+      snake.updatePosition(lastMove);
       break;
     case 'd':
       if (lastMove == SnakeMove.LEFT) break;
       lastMove = SnakeMove.RIGHT;
-      snake.addPosition(lastPosition, lastMove);
+      snake.updatePosition(lastMove);
       break;
     }
   } else {

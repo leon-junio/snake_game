@@ -6,8 +6,6 @@
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 
 public class Snake {
 
@@ -16,7 +14,6 @@ public class Snake {
 
   private static final int FOOD_COLISION_TOLERANCE = 10, BODY_COLISION_TOLERANCE = 1;
   private List<SnakeBody> snakeBody = new ArrayList<>();
-  private Map<Position, SnakeMove> positions = new HashMap<>();
 
   public List<SnakeBody> getSnakeBody() {
     return snakeBody;
@@ -24,15 +21,6 @@ public class Snake {
 
   public void setSnakeBody(List<SnakeBody> snakeBody) {
     this.snakeBody = snakeBody;
-  }
-
-
-  public Map<Position, SnakeMove> getPositions() {
-    return positions;
-  }
-
-  public void setPositions(Map<Position, SnakeMove> positions) {
-    this.positions = positions;
   }
 
   /**
@@ -53,12 +41,12 @@ public class Snake {
   }
 
   /**
-   * Get the snake body at the specified index
-   * @param index the index of the snake body
+   * Update position of snakeHead
+   * @param movement SnakeMove that user typed
    * @return SnakeBody the snake body at the specified index
    */
-  public void addPosition(Position position, SnakeMove movement) {
-    positions.put(position.clone(), movement);
+  public void updatePosition(SnakeMove movement) {
+    snakeBody.get(0).setMovement(movement);
   }
 
   /**
@@ -67,14 +55,6 @@ public class Snake {
    */
   public void addSnakeBody(SnakeBody body) {
     snakeBody.add(body);
-  }
-
-  /**
-   * Gets the position of the snake.
-   * @param position The position to be retrieved.
-   */
-  public void getPosition(Position position) {
-    positions.get(position);
   }
 
   /**
@@ -90,8 +70,6 @@ public class Snake {
    */
   public void destroySnake() {
     snakeBody.clear();
-    if (!positions.isEmpty())
-      positions.clear();
   }
 
   /**
@@ -115,17 +93,16 @@ public class Snake {
    * If the snake collides with borders or body, the game is over.
    */
   public void updateMovement() {
-    if (!positions.isEmpty()) {
-      for (int index = 0; index < snakeBody.size(); index++) {
-        var body = snakeBody.get(index);
-        if (checkBodyPosition(body.getPosition())) {
-          var actualMovement = positions.get(body.getPosition());
-          body.setMovement(actualMovement);
-          checkLastBody(index);
+    if (snakeBody.size() > 1) {
+        for (int index = snakeBody.size() - 1; index > 0; index--) {
+            var currentBody = snakeBody.get(index);
+            var previousBody = snakeBody.get(index - 1);
+            currentBody.getPosition().setX(previousBody.getPosition().getX());
+            currentBody.getPosition().setY(previousBody.getPosition().getY());
+            currentBody.setMovement(previousBody.getMovement());
         }
-      }
     }
-    updateAllPositions();
+    updateHeadPosition();
     if (checkCollisionWithFood()) {
       SnakeGame.newFood();
       newBody();
@@ -141,17 +118,14 @@ public class Snake {
    * @param position The position to start the snake.
    */
   public void startSnake(Integer[] position) {
-    addPosition(new Position(position), SnakeMove.UP);
     addSnakeBody(new SnakeBody(SnakeMove.UP, new Position(position)));
   }
 
   /**
    * Updates the position of all snake pieces of body.
    */
-  private void updateAllPositions() {
-    for (var body : snakeBody) {
-      body.doMovement(SnakeGame.VELOCITY);
-    }
+  private void updateHeadPosition() {
+     snakeBody.get(0).doMovement(SnakeGame.VELOCITY);
   }
 
 
@@ -193,24 +167,5 @@ public class Snake {
     var position = getFirstPosition();
     return  (position.getX() < SnakeGame.BORDER || position.getX() > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
       position.getY() < SnakeGame.BORDER || position.getY() > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
-  }
-
-  /**
-   * Checks if the last body of the snake has been reached and removes its position from the positions map if so.
-   * @param index The index of the current body part being checked.
-   */
-  private void checkLastBody(int index) {
-    if (snakeBody.size() == 1 || index == snakeBody.size()-1) {
-      positions.remove(snakeBody.get(index).getPosition());
-    }
-  }
-
-  /**
-   * Checks if the given body position is one joint of movement.
-   * @param bodyPosition The position to be checked.
-   * @return True if the position is already occupied, false otherwise.
-   */
-  private boolean checkBodyPosition(Position bodyPosition) {
-    return positions.containsKey(bodyPosition);
   }
 }
