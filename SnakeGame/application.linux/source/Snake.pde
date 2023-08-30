@@ -9,26 +9,25 @@ import java.util.ArrayList;
 
 public class Snake {
 
+  private static final byte FOOD_COLISION_TOLERANCE = 10, BODY_COLISION_TOLERANCE = 1;
+  private short[] bodyX, bodyY;
+  private short arrIndex;
+  private SnakeMove[] movements;
+
   public Snake() {
+    init();
   }
 
-  private static final int FOOD_COLISION_TOLERANCE = 10, BODY_COLISION_TOLERANCE = 1;
-  private List<SnakeBody> snakeBody = new ArrayList<>();
-
-  public List<SnakeBody> getSnakeBody() {
-    return snakeBody;
+  private void init() {
+    arrIndex = 0;
+    var pieces = piecesPerScreen();
+    bodyX = new short[pieces];
+    bodyY = new short[pieces];
+    movements = new SnakeMove[pieces];
   }
 
-  public void setSnakeBody(List<SnakeBody> snakeBody) {
-    this.snakeBody = snakeBody;
-  }
-
-  /**
-   * Get the size of the snake body
-   * @return int the size of the snake body
-   */
-  public int bodySize() {
-    return snakeBody.size();
+  public int piecesPerScreen() {
+    return (SnakeGame.W * SnakeGame.H) / (SnakeGame.SNAKE_SIZE_W * SnakeGame.SNAKE_SIZE_H);
   }
 
   /**
@@ -36,8 +35,8 @@ public class Snake {
    * @param index the index of the snake body
    * @return SnakeBody the snake body at the specified index
    */
-  public SnakeBody getBody(int index) {
-    return snakeBody.get(index);
+  public short[] getPosition(int index) {
+    return new short[]{bodyX[index], bodyY[index]};
   }
 
   /**
@@ -46,30 +45,22 @@ public class Snake {
    * @return SnakeBody the snake body at the specified index
    */
   public void updatePosition(SnakeMove movement) {
-    getSnakeHead().setMovement(movement);
-  }
-
-  /**
-   * Adds a new SnakeBody to the snake.
-   * @param body The SnakeBody to be added.
-   */
-  public void addSnakeBody(SnakeBody body) {
-    snakeBody.add(body);
+    movements[0] = movement;
   }
 
   /**
    * Gets the first position of the snake.
    * @return Position The first position of the snake.
    */
-  public int[] getFirstPosition() {
-    return getSnakeHead().getPosition();
+  public short[] getFirstPosition() {
+    return new short[]{bodyX[0], bodyY[0]};
   }
 
   /**
    * Destroys the snake by clearing its body and positions.
    */
   public void destroySnake() {
-    snakeBody.clear();
+    init();
   }
 
   /**
@@ -78,15 +69,19 @@ public class Snake {
    * The new body is positioned one movement offset away from the last body.
    */
   public void newBody() {
-    var lastBody = snakeBody.get(snakeBody.size()-1);
-    var positions = lastBody.getPosition();
-    var movement = lastBody.getMovement();
+    short[] lastPosition = {bodyX[arrIndex], bodyY[arrIndex]};
+    var movement = movements[arrIndex];
     var offset = movement.getOffset();
-    var body = new SnakeBody(movement, positions);
-    body.setX(body.getX() + offset[0]);
-    body.setY(body.getY() +offset[1]);
-    addSnakeBody(body);
+    arrIndex++;
+    bodyX[arrIndex] = (short)(lastPosition[0] + offset[0]);
+    bodyY[arrIndex] = (short)(lastPosition[1] + offset[1]);
+    movements[arrIndex] = movement;
   }
+
+  public short getSize() {
+    return (short) (arrIndex + 1);
+  }
+
 
   /**
    * Updates the movement of the snake and checks for collisions with food, borders and body.
@@ -94,14 +89,12 @@ public class Snake {
    * If the snake collides with borders or body, the game is over.
    */
   public void updateMovement() {
-    if (snakeBody.size() > 1) {
-        for (int index = snakeBody.size() - 1; index > 0; index--) {
-            var currentBody = snakeBody.get(index);
-            var previousBody = snakeBody.get(index - 1);
-            currentBody.setX(previousBody.getX());
-            currentBody.setY(previousBody.getY());
-            currentBody.setMovement(previousBody.getMovement());
-        }
+    if (getSize() > 1) {
+      for (int index = arrIndex; index > 0; index--) {
+        bodyX[index] = bodyX[index - 1];
+        bodyY[index] = bodyY[index - 1];
+        movements[index] = movements[index-1];
+      }
     }
     updateHeadPosition();
     if (checkCollisionWithFood()) {
@@ -118,15 +111,17 @@ public class Snake {
    * Starts the snake at the specified position.
    * @param position The position to start the snake.
    */
-  public void startSnake(int[] position) {
-    addSnakeBody(new SnakeBody(SnakeMove.UP, position));
+  public void startSnake(short[] position) {
+    bodyX[0] = position[0];
+    bodyY[0] = position[1];
+    movements[0] = SnakeMove.UP;
   }
 
   /**
    * Updates the position of all snake pieces of body.
    */
   private void updateHeadPosition() {
-     getSnakeHead().doMovement(SnakeGame.VELOCITY);
+    doMovement(movements[0], SnakeGame.VELOCITY);
   }
 
 
@@ -135,12 +130,11 @@ public class Snake {
    * @return true if there is a collision, false otherwise.
    */
   private boolean checkCollisionWithBody() {
-    var firstBody = getSnakeHead();
     var result = false;
-    for (int index = 1; index < snakeBody.size(); index++) {
-      var body = snakeBody.get(index);
-      if (Math.abs(body.getX() - firstBody.getX()) <= BODY_COLISION_TOLERANCE &&
-        Math.abs(body.getY() - firstBody.getY()) <= BODY_COLISION_TOLERANCE) {
+    for (int index = 1; index < getSize(); index++) {
+      short[] body = {bodyX[index], bodyY[index]};
+      if (Math.abs(body[0] - bodyX[0]) <= BODY_COLISION_TOLERANCE &&
+        Math.abs(body[1] - bodyY[0]) <= BODY_COLISION_TOLERANCE) {
         result = true;
         break;
       }
@@ -149,21 +143,12 @@ public class Snake {
   }
 
   /**
-   * Gets the snake's head.
-   * @return SnakeBody The snake's head.
-   */
-  public SnakeBody getSnakeHead() {
-    return snakeBody.get(0);
-  }
-
-  /**
    * Checks if the snake collides with the food.
    * @return true if the snake collides with the food, false otherwise.
    */
   private boolean checkCollisionWithFood() {
-    var bodyPos = getSnakeHead();
-    return (Math.abs(SnakeGame.FOOD_X - bodyPos.getX()) <= FOOD_COLISION_TOLERANCE &&
-      Math.abs(SnakeGame.FOOD_Y - bodyPos.getY()) <= FOOD_COLISION_TOLERANCE);
+    return (Math.abs(SnakeGame.FOOD_X - bodyX[0]) <= FOOD_COLISION_TOLERANCE &&
+      Math.abs(SnakeGame.FOOD_Y - bodyY[0]) <= FOOD_COLISION_TOLERANCE);
   }
 
   /**
@@ -171,8 +156,28 @@ public class Snake {
    * @return true if the snake has collided with the borders, false otherwise.
    */
   private boolean checkCollisionWithBorders() {
-    var body = getSnakeHead();
-    return  (body.getX() < SnakeGame.BORDER || body.getX() > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
-      body.getY() < SnakeGame.BORDER || body.getY() > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
+    return  (bodyX[0] < SnakeGame.BORDER || bodyX[0] > SnakeGame.W - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_W ||
+      bodyY[0] < SnakeGame.BORDER || bodyY[0] > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
+  }
+
+  /**
+   * Do a movement in the snake body with a velocity value
+   * @param velocity short value of velocity
+   */
+  public void doMovement(SnakeMove movement, short velocity) {
+    switch(movement) {
+    case UP:
+      bodyY[0] -= velocity;
+      break;
+    case DOWN:
+      bodyY[0] += velocity;
+      break;
+    case LEFT:
+      bodyX[0] -= velocity;
+      break;
+    case RIGHT:
+      bodyX[0] += velocity;
+      break;
+    }
   }
 }

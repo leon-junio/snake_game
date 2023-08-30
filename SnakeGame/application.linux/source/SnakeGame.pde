@@ -5,20 +5,20 @@
 
 import java.util.Random;
 
-public static final int[] BG_COLOR = {50, 230, 50};
+public static final short[] BG_COLOR = {50, 256, 50};
 private static Snake snake;
-public static final int W = 600, H = 400;
-public static final int SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
-public static int MOVE_INTERVAL = 100;
+public static final short W = 600, H = 400;
+public static final byte SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
+public static byte MOVE_INTERVAL = 100;
 private static int score;
 private static SnakeMove lastMove = null;
 public static boolean isRunning;
 private static long currentTime = 0l, lastMoveTime;
-private static SnakeBody body = null;
-private static int FOOD_X, FOOD_Y;
-private static int[] FOOD_COLOR;
+private static short[] bodyPos;
+private static short FOOD_X, FOOD_Y;
+private static short[] FOOD_COLOR;
 private static Random random;
-
+private static PFont FONT_SCORE, FONT_GAME;
 
 /**
  * Setup configuration of the game
@@ -30,8 +30,10 @@ void setup() {
   isRunning = true;
   lastMoveTime = System.currentTimeMillis();
   frameRate(60);
+  FONT_SCORE = createFont("Impact", 18);
+  FONT_GAME =  createFont("Impact", 32);
   snake = new Snake();
-  snake.startSnake(new int[]{(int)W/2, (int)H/2});
+  snake.startSnake(new short[]{W/2, H/2});
   random = new Random();
   newFood();
 }
@@ -68,7 +70,7 @@ void draw() {
  */
 void drawGameOver() {
   fill(255, 255, 255);
-  textFont(createFont("Impact", 32));
+  textFont(FONT_GAME);
   text("Game Over", (W/2)-65, H/2);
   text("Press 'R' to restart", (W/2)-120, (H/2)+40);
 }
@@ -77,15 +79,15 @@ void drawGameOver() {
  * Draw the snake body and head in the screen
  */
 void drawSnake() {
-  body = snake.getBody(0);
+  bodyPos = snake.getPosition(0);
   stroke(0, 30, 255);
   fill(150, 60, 200);
-  rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
-  for (int index = 1; index < snake.bodySize(); index++) {
-    body = snake.getBody(index);
+  rect(bodyPos[0], bodyPos[1], SNAKE_SIZE_W, SNAKE_SIZE_H);
+  for (int index = 1; index < snake.getSize(); index++) {
+    bodyPos = snake.getPosition(index);
     stroke(0, 30, 255);
     fill(50, 100, 200);
-    rect(body.getX(), body.getY(), SNAKE_SIZE_W, SNAKE_SIZE_H);
+    rect(bodyPos[0], bodyPos[1], SNAKE_SIZE_W, SNAKE_SIZE_H);
   }
 }
 
@@ -94,8 +96,8 @@ void drawSnake() {
  */
 void drawScore() {
   fill(255, 255, 255);
-  textFont(createFont("Impact", 18));
-  text("Leon Snake Game: "+score, (W/2) - 70, H - 3);
+  textFont(FONT_SCORE);
+  text("Leon Snake Game: "+ score, (W/2) - 70, H - 3);
 }
 
 /**
@@ -135,11 +137,12 @@ public static void gameOver() {
  * Restart the game (reset snake, food, score and move interval)
  */
 void restartGame() {
-  snake.startSnake(new int[]{(int)W/2, (int)H/2});
+  snake.startSnake(new short[]{W/2, H/2});
   lastMove = null;
   isRunning = true;
   MOVE_INTERVAL = 100;
   score = 0;
+  newFood();
 }
 
 /**
@@ -154,9 +157,9 @@ public static void updateScore() {
  * For each spawn increase the snake speed (decrease the move interval)
  */
 public static void newFood() {
-  FOOD_X = random.ints(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER).findFirst().getAsInt();
-  FOOD_Y = random.ints(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER).findFirst().getAsInt();
-  FOOD_COLOR = new int[]{random.nextInt(255), random.nextInt(255), random.nextInt(255)};
+  FOOD_X = (short) random.ints(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_Y = (short) random.ints(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER).findFirst().getAsInt();
+  FOOD_COLOR = new short[]{(short)random.nextInt(255), (short)random.nextInt(255), (short)random.nextInt(255)};
   if (MOVE_INTERVAL > 50)
     MOVE_INTERVAL -= 1;
 }
