@@ -13,11 +13,23 @@ public class Snake {
   private short[] bodyX, bodyY;
   private short arrIndex;
   private SnakeMove[] movements;
+  private byte gap;
 
   public Snake() {
     init();
   }
 
+  public short getPositionX(int index) {
+    return bodyX[index];
+  }
+
+  public short getPositionY(int index) {
+    return bodyY[index];
+  }
+
+  /**
+   * Init the arrays and run the calc to the screen
+   */
   private void init() {
     arrIndex = 0;
     var pieces = piecesPerScreen();
@@ -26,7 +38,11 @@ public class Snake {
     movements = new SnakeMove[pieces];
   }
 
-  public int piecesPerScreen() {
+  /**
+   * Calc how much pieces per screen the snake can handle
+   * @return int result of calc
+   */
+  private int piecesPerScreen() {
     return (SnakeGame.W * SnakeGame.H) / (SnakeGame.SNAKE_SIZE_W * SnakeGame.SNAKE_SIZE_H);
   }
 
@@ -49,18 +65,10 @@ public class Snake {
   }
 
   /**
-   * Gets the first position of the snake.
-   * @return Position The first position of the snake.
-   */
-  public short[] getFirstPosition() {
-    return new short[]{bodyX[0], bodyY[0]};
-  }
-
-  /**
    * Destroys the snake by clearing its body and positions.
    */
   public void destroySnake() {
-    init();
+    arrIndex = 0;
   }
 
   /**
@@ -69,19 +77,19 @@ public class Snake {
    * The new body is positioned one movement offset away from the last body.
    */
   public void newBody() {
-    short[] lastPosition = {bodyX[arrIndex], bodyY[arrIndex]};
-    var movement = movements[arrIndex];
-    var offset = movement.getOffset();
+    SnakeMove movement = movements[arrIndex];
+    bodyX[arrIndex+1] = (short) (getPositionX(arrIndex) + movement.getOffsetX());
+    bodyY[arrIndex+1] = (short) (getPositionY(arrIndex) + movement.getOffsetY());
+    movements[arrIndex+1] = movement;
     arrIndex++;
-    bodyX[arrIndex] = (short)(lastPosition[0] + offset[0]);
-    bodyY[arrIndex] = (short)(lastPosition[1] + offset[1]);
-    movements[arrIndex] = movement;
   }
 
+  /**
+   * Get the size of array
+   */
   public short getSize() {
     return (short) (arrIndex + 1);
   }
-
 
   /**
    * Updates the movement of the snake and checks for collisions with food, borders and body.
@@ -109,21 +117,21 @@ public class Snake {
 
   /**
    * Starts the snake at the specified position.
-   * @param position The position to start the snake.
+   * @param positionX The position X to start the snake.
+   * @param positionY The position Y to start the snake.
    */
-  public void startSnake(short[] position) {
-    bodyX[0] = position[0];
-    bodyY[0] = position[1];
+  public void startSnake(short positionX, short positionY) {
+    bodyX[0] = positionX;
+    bodyY[0] = positionY;
     movements[0] = SnakeMove.UP;
   }
 
   /**
-   * Updates the position of all snake pieces of body.
+   * Updates the position of snake head body
    */
   private void updateHeadPosition() {
     doMovement(movements[0], SnakeGame.VELOCITY);
   }
-
 
   /**
    * Checks if the snake's head collides with its body.
@@ -132,9 +140,8 @@ public class Snake {
   private boolean checkCollisionWithBody() {
     var result = false;
     for (int index = 1; index < getSize(); index++) {
-      short[] body = {bodyX[index], bodyY[index]};
-      if (Math.abs(body[0] - bodyX[0]) <= BODY_COLISION_TOLERANCE &&
-        Math.abs(body[1] - bodyY[0]) <= BODY_COLISION_TOLERANCE) {
+      if (Math.abs(bodyX[index] - bodyX[0]) <= BODY_COLISION_TOLERANCE &&
+        Math.abs(bodyY[index] - bodyY[0]) <= BODY_COLISION_TOLERANCE) {
         result = true;
         break;
       }
@@ -160,23 +167,38 @@ public class Snake {
       bodyY[0] < SnakeGame.BORDER || bodyY[0] > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
   }
 
+  private void fixBodyYGrid() {
+    gap = (byte)(bodyY[0] % SnakeGame.GRID_SIZE);
+    bodyY[0] = (short) (gap < 5? bodyY[0] - gap : bodyY[0] + gap);
+  }
+
+  private void fixBodyXGrid() {
+    gap = (byte)(bodyY[0] % SnakeGame.GRID_SIZE);
+    bodyX[0] = (short) (gap < 5? bodyX[0] - gap : bodyX[0] + gap);
+  }
+
   /**
    * Do a movement in the snake body with a velocity value
+   * @param movement actual snakeMove
    * @param velocity short value of velocity
    */
   public void doMovement(SnakeMove movement, short velocity) {
     switch(movement) {
     case UP:
       bodyY[0] -= velocity;
+      fixBodyYGrid();
       break;
     case DOWN:
       bodyY[0] += velocity;
+      fixBodyYGrid();
       break;
     case LEFT:
       bodyX[0] -= velocity;
+      fixBodyXGrid();
       break;
     case RIGHT:
       bodyX[0] += velocity;
+      fixBodyXGrid();
       break;
     }
   }

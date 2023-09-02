@@ -5,24 +5,24 @@
 
 import java.util.Random;
 
-public static final short[] BG_COLOR = {50, 256, 50};
 private static Snake snake;
+private static SnakeMove lastMove = null;
+private static Random random;
+
+private static PFont FONT_SCORE, FONT_GAME;
+public static final short[] BG_COLOR = {0, 0, 0};
 public static final short W = 600, H = 400;
 public static final byte SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
+private static short[] FOOD_COLOR;
 public static byte MOVE_INTERVAL = 100;
 private static int score;
-private static SnakeMove lastMove = null;
 public static boolean isRunning;
 private static long currentTime = 0l, lastMoveTime;
-private static short[] bodyPos;
 private static short FOOD_X, FOOD_Y;
-private static short[] FOOD_COLOR;
-private static Random random;
-private static PFont FONT_SCORE, FONT_GAME;
+private static byte gapGrid;
 
 /**
  * Setup configuration of the game
- *
  */
 void setup() {
   size(600, 400);
@@ -32,8 +32,9 @@ void setup() {
   frameRate(60);
   FONT_SCORE = createFont("Impact", 18);
   FONT_GAME =  createFont("Impact", 32);
+  FOOD_COLOR = new short[3];
   snake = new Snake();
-  snake.startSnake(new short[]{W/2, H/2});
+  snake.startSnake((short)(W/2), (short)(H/2));
   random = new Random();
   newFood();
 }
@@ -79,15 +80,13 @@ void drawGameOver() {
  * Draw the snake body and head in the screen
  */
 void drawSnake() {
-  bodyPos = snake.getPosition(0);
   stroke(0, 30, 255);
-  fill(150, 60, 200);
-  rect(bodyPos[0], bodyPos[1], SNAKE_SIZE_W, SNAKE_SIZE_H);
+  fill(150, 200, 60);
+  rect(snake.getPositionX(0), snake.getPositionY(0), SNAKE_SIZE_W, SNAKE_SIZE_H);
   for (int index = 1; index < snake.getSize(); index++) {
-    bodyPos = snake.getPosition(index);
     stroke(0, 30, 255);
-    fill(50, 100, 200);
-    rect(bodyPos[0], bodyPos[1], SNAKE_SIZE_W, SNAKE_SIZE_H);
+    fill(50, 200, 100);
+    rect(snake.getPositionX(index), snake.getPositionY(index), SNAKE_SIZE_W, SNAKE_SIZE_H);
   }
 }
 
@@ -137,7 +136,7 @@ public static void gameOver() {
  * Restart the game (reset snake, food, score and move interval)
  */
 void restartGame() {
-  snake.startSnake(new short[]{W/2, H/2});
+  snake.startSnake((short)(W/2), (short)(H/2));
   lastMove = null;
   isRunning = true;
   MOVE_INTERVAL = 100;
@@ -158,10 +157,24 @@ public static void updateScore() {
  */
 public static void newFood() {
   FOOD_X = (short) random.ints(0 + GRID_SIZE + BORDER, W - GRID_SIZE - BORDER).findFirst().getAsInt();
+  gapGrid = (byte)(FOOD_X % GRID_SIZE);
+  FOOD_X = (short) (gapGrid < 5? FOOD_X - gapGrid : FOOD_X + gapGrid);
   FOOD_Y = (short) random.ints(0 + GRID_SIZE + BORDER, H - GRID_SIZE - BORDER).findFirst().getAsInt();
-  FOOD_COLOR = new short[]{(short)random.nextInt(255), (short)random.nextInt(255), (short)random.nextInt(255)};
-  if (MOVE_INTERVAL > 50)
-    MOVE_INTERVAL -= 1;
+  gapGrid = (byte)(FOOD_Y % GRID_SIZE);
+  FOOD_Y = (short) (gapGrid < 5? FOOD_Y - gapGrid : FOOD_Y + gapGrid);
+  FOOD_COLOR[0] = randColor();
+  FOOD_COLOR[1] = randColor();
+  FOOD_COLOR[2] = randColor();
+  if (score%2 == 0 && MOVE_INTERVAL > 50)
+    MOVE_INTERVAL += 1;
+}
+
+/**
+ * New random color
+ * @return short color
+ */
+private static short randColor() {
+  return (short) random.nextInt(255);
 }
 
 /**

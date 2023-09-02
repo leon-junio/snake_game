@@ -10,33 +10,23 @@ public enum SnakeMove {
   /**
    * Offset to apply to the body piece when the snake moves
    **/
-  UP,
-    DOWN,
-    LEFT,
-    RIGHT;
+  UP(0, + 10),
+    DOWN(0, - 10),
+    LEFT(+ 10, 0),
+    RIGHT(- 10, 0);
 
-  private final byte OFFSET = 10;
+  private SnakeMove(int offsetX, int offsetY) {
+    this.offsetX = (byte) offsetX;
+    this.offsetY = (byte) offsetY;
+  }
 
-  /**
-   * Get the offset to apply to the body piece when the snake moves
-   * @return byte[] - Offset to apply to the body piece when the snake moves
-   **/
-  public byte[] getOffset() {
-    byte[] result = {};
-    switch(this) {
-    case UP:
-      result = new byte[]{0, +OFFSET};
-      break;
-    case DOWN:
-      result = new byte[]{0, -OFFSET};
-      break;
-    case LEFT:
-      result = new byte[]{+OFFSET, 0};
-      break;
-    case RIGHT:
-      result = new byte[]{-OFFSET, 0};
-      break;
-    }
-    return result;
+  private byte offsetX, offsetY;
+
+  public byte getOffsetX() {
+    return offsetX;
+  }
+
+  public byte getOffsetY() {
+    return offsetY;
   }
 }

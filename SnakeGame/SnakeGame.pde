@@ -9,17 +9,18 @@ private static Snake snake;
 private static SnakeMove lastMove = null;
 private static Random random;
 
+public static boolean isRunning;
 private static PFont FONT_SCORE, FONT_GAME;
+private static short[] FOOD_COLOR;
 public static final short[] BG_COLOR = {0, 0, 0};
 public static final short W = 600, H = 400;
-public static final byte SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10;
-private static short[] FOOD_COLOR;
-public static byte MOVE_INTERVAL = 100;
-private static int score;
-public static boolean isRunning;
+public static final byte SNAKE_SIZE_W = 10, SNAKE_SIZE_H = 10, BORDER = 20, GRID_SIZE = 10, VELOCITY = 10, FOOD_SIZE = 8;
+private static byte gapGrid, MOVE_INTERVAL = 100;
+private static short score;
 private static long currentTime = 0l, lastMoveTime;
 private static short FOOD_X, FOOD_Y;
-private static byte gapGrid;
+
+
 
 /**
  * Setup configuration of the game
@@ -118,7 +119,7 @@ void drawBorders() {
 void drawFood() {
   stroke(255, 255, 255);
   fill(FOOD_COLOR[0], FOOD_COLOR[1], FOOD_COLOR[2]);
-  rect(FOOD_X, FOOD_Y, GRID_SIZE, GRID_SIZE);
+  rect(FOOD_X, FOOD_Y, FOOD_SIZE, FOOD_SIZE);
 }
 
 /** GAME LOGIC **/

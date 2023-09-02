@@ -167,11 +167,17 @@ public class Snake {
       bodyY[0] < SnakeGame.BORDER || bodyY[0] > SnakeGame.H - SnakeGame.BORDER - SnakeGame.SNAKE_SIZE_H);
   }
 
+  /**
+   * Fix body grid when snake moves over Y
+   */
   private void fixBodyYGrid() {
     gap = (byte)(bodyY[0] % SnakeGame.GRID_SIZE);
     bodyY[0] = (short) (gap < 5? bodyY[0] - gap : bodyY[0] + gap);
   }
 
+  /**
+   * Fix body grid when snake moves over X
+   */
   private void fixBodyXGrid() {
     gap = (byte)(bodyY[0] % SnakeGame.GRID_SIZE);
     bodyX[0] = (short) (gap < 5? bodyX[0] - gap : bodyX[0] + gap);
